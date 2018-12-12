@@ -1,11 +1,11 @@
 import requests
-import xlwt
+import xlsxwriter
 import json
 import time
+time_start=time.time()
 
-
-book = xlwt.Workbook()# 创建一个excel对象
-sheet = book.add_sheet('block_123456',cell_overwrite_ok=True) # 添加一个sheet页
+book = xlsxwriter.Workbook('btc_data_18下半年_output_5000.xlsx')# 创建一个excel对象
+sheet = book.add_worksheet('block_123456') # 添加一个sheet页
 title = ["区块高度","区块哈希值","区块生成时间","费用","交易哈希值","交易地址序号","收入地址","收入金额"]
 for col in range(len(title)):  # 存入第一行标题
         sheet.write(0, col, title[col])
@@ -27,17 +27,17 @@ createVar = locals()
 
 
 i = 0
-blockID=550000
-for i0 in range(100):
+blockID=549400
+for i0 in range(4000):
     blockID=blockID+1
     # 执行API调用并存储响应
     strurl="https://chain.api.btc.com/v3/block/"+str(blockID)+"/tx"
     url = strurl
-    time.sleep(0.5)
+    time.sleep(0.75)
 
-    print(url)
+
     # 获得响应对象
-    r=requests.get(url)
+    r=requests.get(url,timeout = 50000)
 
 
     # 获得状态码
@@ -53,25 +53,28 @@ for i0 in range(100):
         for i2 in response_dict['data']['list'][j1]['outputs']:  # 寻找交易内收款地址序号
             j2 = j2 + 1  # 地址序号
             i = i + 1
-            sheet.write(i, 0, response_dict['data']['list'][j1]['block_height'])
-            sheet.write(i, 1, response_dict['data']['list'][j1]['block_hash'])
-            sheet.write(i, 2, response_dict['data']['list'][j1]['block_time'])
-            sheet.write(i, 3, response_dict['data']['list'][j1]['fee'])
-            sheet.write(i, 4, response_dict['data']['list'][j1]['hash'])
-            sheet.write(i, 5, j2)
-            sheet.write(i, 6, response_dict['data']['list'][j1]['outputs'][j2]['addresses'])
-            sheet.write(i, 7, response_dict['data']['list'][j1]['outputs'][j2]['value'])
+            sheet.write(i, 0, str(response_dict['data']['list'][j1]['block_height']))
+            sheet.write(i, 1, str(response_dict['data']['list'][j1]['block_hash']))
+            sheet.write(i, 2, str(response_dict['data']['list'][j1]['block_time']))
+            sheet.write(i, 3, str(response_dict['data']['list'][j1]['fee']))
+            sheet.write(i, 4, str(response_dict['data']['list'][j1]['hash']))
+            sheet.write(i, 5, str(j2))
+            sheet.write(i, 6, str(response_dict['data']['list'][j1]['outputs'][j2]['addresses']))
+            sheet.write(i, 7, str(response_dict['data']['list'][j1]['outputs'][j2]['value']))
             # print("j1:", j1)
             # print("j2:", j2)
             # print(response_dict['data']['list'][j1]['outputs'][j2]['addresses'])
 
     response_dict.clear()
     del r
-    print("已下载的区块号"+blockID)
-book.save('btc_data1101.xls')
-
-
-
+    print("已下载第"+str(blockID)+"号区块")
+book.close()
+print("成功保存")
+time_end=time.time()
+print('下载共花费(s)：',time_end-time_start)
+#1000个块共有10万条记录，一个xlsx文件可装100万条记录
+#4000个块共用5148秒
+#1000个块有13.5兆
 
 
 
